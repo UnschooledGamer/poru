@@ -5,6 +5,8 @@ import { Config as config } from "./config";
 import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
 import { Track } from "./guild/Track";
+import { RestVersion } from "./Rest";
+import { type Pool } from "undici";
 
 export interface NodeGroup {
   name: string;
@@ -13,6 +15,10 @@ export interface NodeGroup {
   password: string;
   secure?: boolean;
   region?: string[];
+  apiVersion?: RestVersion;
+  versionedPath?: boolean;
+  poolOptions?: Pool.Options
+  requestTimeout?: number
 }
 
 export interface ResolveOptions {
@@ -32,7 +38,7 @@ export interface PoruOptions {
   resumeTimeout?: number;
   reconnectTimeout?: number | null;
   reconnectTries?: number | null;
-  send: Function | null;
+  send?: Function | null;
 }
 
 export interface ConnectionOptions {
@@ -45,7 +51,7 @@ export interface ConnectionOptions {
 }
 
 export interface PoruEvents {
-  
+
   /**
     * Emitted when data useful for debugging is produced
     * @eventProperty
@@ -192,7 +198,7 @@ export class Poru extends EventEmitter {
       case "oceanic": {
         this.send = (packet: any) => {
           const guild = client.guilds.get(packet.d.guild_id);
-          if (guild) guild.shard.send(packet);
+          if (guild) guild.shard.send(packet?.op, packet?.d);
         };
 
         client.on("packet", async (packet: any) => {
@@ -202,6 +208,7 @@ export class Poru extends EventEmitter {
       }
       case "other": {
         if (!this.send) throw new Error("Send function is required in Poru Options")
+        if (typeof this.send != "function") throw new TypeError(`Send Function needs to be a function, but got ${typeof this.send}`)
 
         this.send = this.options.send;
         break;

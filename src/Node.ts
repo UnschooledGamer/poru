@@ -1,7 +1,8 @@
 import { Poru, PoruOptions, NodeGroup } from "./Poru";
 import WebSocket from "ws";
 import { Config as config } from "./config";
-import { Rest } from "./Rest";
+import { Rest, RestVersion } from "./Rest";
+import { type Pool } from "undici";
 
 export interface NodeStats {
   players: number;
@@ -32,6 +33,10 @@ export class Node {
   public readonly restURL: string;
   public readonly socketURL: string;
   public password: string;
+  public readonly apiVersion: RestVersion;
+  public readonly versionedPath: boolean;
+  public readonly poolOptions: Pool.Options;
+  public readonly requestTimeout: number
   public readonly secure: boolean;
   public readonly regions: Array<string>;
   public sessionId: string;
@@ -51,9 +56,11 @@ export class Node {
     this.poru = poru;
     this.name = node.name;
     this.options = node;
-    this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
     this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/`;
     this.password = node.password || "youshallnotpass";
+    this.apiVersion = node.apiVersion ?? "v3";
+    this.versionedPath = node.versionedPath ?? true
+    this.requestTimeout = node.requestTimeout ?? 15e3
     this.secure = node.secure || false;
     this.regions = node.region || null;
     this.sessionId = null;
@@ -166,7 +173,7 @@ export class Node {
     if (!packet?.op) return;
 
     this.poru.emit("raw", "Node", packet)
-    this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
+    this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${packet} `);
 
     if (packet.op === "stats") {
       delete packet.op;
@@ -175,7 +182,7 @@ export class Node {
     if (packet.op === "ready") {
       this.rest.setSessionId(packet.sessionId);
       this.sessionId = packet.sessionId;
-      this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`)
+      this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${packet}`)
       if (this.resumeKey) {
         this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
         this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`

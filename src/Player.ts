@@ -132,33 +132,33 @@ export class Player extends EventEmitter {
 
 
 
- public setVolume(volume :number) {
-   
-    if(volume < 0 || volume > 1000) throw new Error("[Poru Exception] Volume must be between 0 to 1000");
-    this.node.rest.updatePlayer({guildId: this.guildId,data: {volume}});
-     this.volume = volume
-     return this; 
-    }
+  public setVolume(volume: number) {
 
-    public setLoop(mode:Loop) {
-      if (!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`);
-  
-      if (!["NONE", "TRACK", "QUEUE"].includes(mode)) throw new Error(`[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`);
-  
-      switch (mode) {
-        case "NONE": {
-          this.loop = "NONE";
-          break;
-          }
-        case "TRACK": {
-          this.loop = "TRACK";
-          break;
-        }
-        case "QUEUE": {
-          this.loop = "QUEUE";
-          break;
-        }
-        default :
+    if (volume < 0 || volume > 1000) throw new Error("[Poru Exception] Volume must be between 0 to 1000");
+    this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume } });
+    this.volume = volume
+    return this;
+  }
+
+  public setLoop(mode: Loop) {
+    if (!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`);
+
+    if (!["NONE", "TRACK", "QUEUE"].includes(mode)) throw new Error(`[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`);
+
+    switch (mode) {
+      case "NONE": {
+        this.loop = "NONE";
+        break;
+      }
+      case "TRACK": {
+        this.loop = "TRACK";
+        break;
+      }
+      case "QUEUE": {
+        this.loop = "QUEUE";
+        break;
+      }
+      default:
         {
           this.loop = "NONE";
         }
@@ -194,8 +194,8 @@ export class Player extends EventEmitter {
     return this;
   }
 
-  public set(key: string, value: unknown) {
-    return this.data[key] = value;
+  public set<K extends string, V = unknown>(key: K, value: V) {
+    return this.data[key] = value as V;
   }
 
   public get<K>(key: string): K {
@@ -257,6 +257,7 @@ export class Player extends EventEmitter {
 
         if (this.queue.length === 0) {
           this.isPlaying = false;
+          this.currentTrack = null;
           return this.poru.emit("playerDisconnect", this);
         } else if (this.queue.length > 0) {
           this.poru.emit("playerEnd", this, this.currentTrack);

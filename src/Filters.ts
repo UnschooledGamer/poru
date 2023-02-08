@@ -65,10 +65,10 @@ export class Filters {
 
   public timescale: timescaleOptions;
 
-  constructor(player) {
+  constructor(player: Player) {
     this.player = player;
     (this.volume = 1.0),
-     (this.equalizer = []);
+      (this.equalizer = []);
     this.karaoke = null;
     this.timescale = null;
     this.tremolo = null;
@@ -80,88 +80,91 @@ export class Filters {
   }
 
   public setEqualizer(bands: Band[]): Filters {
- 
-        this.equalizer = bands;
-        this.updateFilters();
-        return this;
+
+    this.equalizer = bands;
+    this.updateFilters();
+    return this;
   }
 
 
- /**
-     * Change the karaoke Options applied to the currently playing track
-     * @param karaoke An object that conforms to the KaraokeOptions type that defines a range of frequencies to mute
-     * @returns The current filter instance
-     */
+  /**
+      * Change the karaoke Options applied to the currently playing track
+      * @param karaoke An object that conforms to the KaraokeOptions type that defines a range of frequencies to mute
+      * @returns The current filter instance
+      */
   public setKaraoke(karaoke?: karaokeOptions): Filters {
-    this.karaoke = karaoke|| null;
+    this.karaoke = karaoke || null;
     this.updateFilters();
     return this;
-}
+  }
 
-public setTimescale(timescale?: timescaleOptions): Filters {
+  public setTimescale(timescale?: timescaleOptions): Filters {
     this.timescale = timescale || null;
     this.updateFilters();
     return this;
-}
+  }
 
-public setTremolo(tremolo?: tremoloOptions):Filters {
+  public setTremolo(tremolo?: tremoloOptions): Filters {
     this.tremolo = tremolo || null;
     this.updateFilters();
     return this;
-}
+  }
 
-public setVibrato(vibrato?: vibratoOptions): Filters {
+  public setVibrato(vibrato?: vibratoOptions): Filters {
     this.vibrato = vibrato || null;
     this.updateFilters();
     return this;
-}
+  }
 
-public setRotation(rotation?: rotationOptions): Filters {
+  public setRotation(rotation?: rotationOptions): Filters {
     this.rotation = rotation || null;
     this.updateFilters();
 
     return this;
-}
+  }
 
-public setDistortion(distortion: distortionOptions): Filters {
+  public setDistortion(distortion: distortionOptions): Filters {
     this.distortion = distortion || null;
     this.updateFilters();
 
     return this;
-}
+  }
 
 
-public setChannelMix(mix: channelMixOptions):Filters {
+  public setChannelMix(mix: channelMixOptions): Filters {
     this.channelMix = mix || null;
     this.updateFilters();
 
     return this;
-}
+  }
 
-public setLowPass(pass: lowPassOptions): Filters{
+  public setLowPass(pass: lowPassOptions): Filters {
     this.lowPass = pass || null;
     this.updateFilters();
 
     return this;
-}
+  }
 
 
-public clearFilters(): Filters {
+  public clearFilters(): Filters {
     this.player.filters = new Filters(this.player);
     this.updateFilters()
     return this;
-}
+  }
 
 
-  public updateFilters():Filters{
+  public updateFilters(): Filters {
 
-    const {equalizer,karaoke,timescale,tremolo,vibrato,rotation,distortion,channelMix,lowPass,volume} = this;
+    const { equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass, volume } = this;
 
     this.player.node.rest.updatePlayer({
-        guildId :this.player.guildId,
-        data:{filters:{ volume,equalizer,karaoke,timescale,tremolo,vibrato,rotation,distortion,channelMix,lowPass,
-    }}
-})
-return this;
+      guildId: this.player.guildId,
+      data: {
+        filters: {
+          volume, equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass,
+        }
+      }
+    })
+    return this;
   }
 }
