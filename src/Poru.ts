@@ -1,4 +1,4 @@
-import { Node } from "./Node";
+import { Node, type websocketVersion } from "./Node";
 import { Player } from "./Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
@@ -16,7 +16,7 @@ export interface NodeGroup {
   secure?: boolean;
   region?: string[];
   apiVersion?: RestVersion;
-  versionedPath?: boolean;
+  websocketVersion?: websocketVersion 
   poolOptions?: Pool.Options
   requestTimeout?: number
 }
@@ -263,7 +263,7 @@ export class Poru extends EventEmitter {
   }
 
   getNode(identifier: string = "auto") {
-    if (!this.nodes.size) throw new Error(`No nodes avaliable currently`);
+    if (!this.nodes.size) throw new Error(`No nodes available currently`);
 
     if (identifier === "auto") return this.leastUsedNodes;
 
@@ -278,7 +278,7 @@ export class Poru extends EventEmitter {
     if (player) return player;
 
     if (this.leastUsedNodes.length === 0)
-      throw new Error("[Poru Error] No nodes are avaliable");
+      throw new Error("[Poru Error] No nodes are available");
     let node;
     if (options.region) {
       const region = this.getNodeByRegion(options.region)[0];
@@ -286,7 +286,7 @@ export class Poru extends EventEmitter {
     } else {
       node = this.nodes.get(this.leastUsedNodes[0].name);
     }
-    if (!node) throw new Error("[Poru Error] No nodes are avalible");
+    if (!node) throw new Error("[Poru Error] No nodes are available");
 
     return this.createPlayer(node, options);
   }
@@ -314,12 +314,12 @@ export class Poru extends EventEmitter {
     const regex = /^https?:\/\//;
 
     if (regex.test(query)) {
-      let response = await node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`);
+      let response = await node.rest.makeRequest(`/loadtracks?identifier=${encodeURIComponent(query)}`);
       return new Response(response, requester);
     } else {
       let track = `${source || "ytsearch"}:${query}`;
-      let response = await node.rest.get(
-        `/v3/loadtracks?identifier=${encodeURIComponent(track)}`
+      let response = await node.rest.makeRequest(
+        `/loadtracks?identifier=${encodeURIComponent(track)}`
       );
       return new Response(response, requester);
     }
@@ -328,31 +328,31 @@ export class Poru extends EventEmitter {
   async decodeTrack(track: string, node: Node) {
     if (!node) node = this.leastUsedNodes[0];
 
-    return node.rest.get(`/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
+    return node.rest.makeRequest(`/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
   }
 
   async decodeTracks(tracks: string[], node: Node) {
-    return await node.rest.post(`/v3/decodetracks`, tracks);
+    return await node.rest.post(`/decodetracks`, tracks);
   }
 
   async getLavalinkInfo(name: string) {
     let node = this.nodes.get(name);
-    return await node.rest.get(`/v3/info`);
+    return await node.rest.makeRequest(`/info`);
   }
 
   async getLavalinkStatus(name: string) {
     let node = this.nodes.get(name);
-    return await node.rest.get(`/v3/stats`);
+    return await node.rest.makeRequest(`/stats`);
   }
 
-  /* Temp removed
 
-async getLavalinkVersion(name:string){
+async getLavalinkVersion(name:string): Promise<string|null>{
   let node = this.nodes.get(name)
-  return await node.rest.get(`/version`)
+  return await node.rest.makeRequest(`/version`, (R) => {
+    R.path = `/version`
+  })
 
 }
-*/
 
   get(guildId: string) {
     return this.players.get(guildId);

@@ -1,8 +1,12 @@
 import { Node, NodeStats } from "./Node";
-import { type Dispatcher, fetch, type Response, type Agent, Pool } from "undici";
+import { type Dispatcher, type Response, Pool} from "undici";
 import { Poru } from "./Poru";
+import PkgInfo from "../package.json"
+import { Player } from "./Player";
+import { LavalinkFiltersData } from "./Filters";
+import { type IVoiceServer } from "./Connection";
 
-export interface playOptions {
+export interface updatePlayerOptions {
   guildId: string;
   data: {
     encodedTrack?: string;
@@ -12,9 +16,14 @@ export interface playOptions {
     volume?: number;
     position?: number;
     paused?: Boolean;
-    filters?: Object;
-    voice?: any;
+    filters?: Partial<LavalinkFiltersData>;
+    voice?: Partial<IVoiceServer>;
   };
+  /**
+   * Whether to replace the current track with the new track.
+   * @link https://github.com/freyacodes/Lavalink/blob/master/IMPLEMENTATION.md#update-player
+   */
+  noReplace?: boolean
 }
 
 export type RouteLike = `/${string}`;
@@ -30,6 +39,37 @@ export enum RequestMethod {
 export type RestVersion = "v2" | "v3" | "v4";
 
 export type modifyRequest = (options: Dispatcher.RequestOptions) => void;
+
+/**
+ * Received when a API Request encounters an error
+ * @url https://github.com/freyacodes/Lavalink/blob/master/IMPLEMENTATION.md#error-responses
+ */
+export interface InvalidRestRequest {
+  /**
+   * The timestamp of the error in milliseconds
+   */
+  timestamp?: number,
+  /**
+   * The HTTP status code
+   */
+  status?: number,
+  /**
+   * The HTTP status code message
+   */
+  error?: string,
+  /**
+   * The stack trace of the error when trace=true as query param has been sent
+   */
+  trace?: string,
+  /**
+   * The error message
+   */
+  message?: string,
+  /**
+   * The api Request path
+   */
+  path?: string
+}
 
 export class Rest {
   /**
@@ -47,7 +87,7 @@ export class Rest {
   /**
    * initialized poru
    */
-  public poru: Poru;
+  public readonly poru: Poru;
   /**
    * version that is used for Lavalink api
    * @defaultValue `v3`
@@ -57,11 +97,6 @@ export class Rest {
    * The request {@link https://undici.nodejs.org/#/docs/api/Agent Agent} for the requests
    */
   public agent: Dispatcher
-  /**
-   * whether to send the request with version or not
-   * @defaultValue `true`
-   */
-  public readonly versionedPath?: boolean;
   /**
    * The timeout for the requests
    * @defaultValue `15000`
@@ -76,7 +111,6 @@ export class Rest {
     this.password = node.password;
     this.agent = new Pool(this.url, node.poolOptions);
     this.version = node.apiVersion;
-    this.versionedPath = node.versionedPath;
     this.requestTimeout = node.requestTimeout
   }
 
@@ -84,92 +118,90 @@ export class Rest {
     this.sessionId = sessionId;
   }
 
-  getAllPlayers() {
-    return this.get(`/sessions/${this.sessionId}/players`);
+  async getAllPlayers(): Promise<Player[]> {
+    if(!this.sessionId) throw new ReferenceError(`The Lavalink-node is not connected/ready, or is not Up-to date`)
+    const players = await this.makeRequest(`/sessions/${this.sessionId}/players`) as Player[]
+
+    if(!Array.isArray(players)) return []
+
+    return players;
   }
 
-  public async updatePlayer(options: playOptions) {
-    return await this.patch(
-      `/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`,
-      options.data
-    );
+  public async updatePlayer(options: updatePlayerOptions) {
+    if(!this.sessionId) throw new ReferenceError(`The Lavalink-node is not connected/ready, or is not Up-to date`)
+
+    const res = await this.makeRequest<Player>(`/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, (requestOptions) => {
+      requestOptions.method = RequestMethod.Patch,
+      requestOptions.body = JSON.stringify(options.data)
+
+      if(options.noReplace) {
+        const url = new URL(`${this.url}${requestOptions.path}`);
+        url.search = new URLSearchParams({ noReplace: options.noReplace?.toString() || "false" }).toString()
+        requestOptions.path = url.toString().replace(this.url, "")
+      }
+    })
+
+    return res
   }
 
   public async destroyPlayer(guildId: string) {
+    if(!this.sessionId) throw new ReferenceError(`The Lavalink-node is not connected/ready, or is not Up-to date`)
+
     await this.delete(`/sessions/${this.sessionId}/players/${guildId}`);
   }
 
-  public async get(path: RouteLike) {
-    let req = await fetch(this.url + path, {
-      method: RequestMethod.Get,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: this.password,
-      },
-    });
-    return await this.parseResponse(req);
+  public async patch<T>(endpoint: RouteLike, body): Promise<T> {
+
+    const res = await this.makeRequest<T>(endpoint, (RequestOptions) => {
+      RequestOptions.method = RequestMethod.Patch;
+      RequestOptions.body = JSON.stringify(body);
+    })
+
+    return res
   }
+  public async post<T>(endpoint: RouteLike, body): Promise<T> {
+    const res = await this.makeRequest<T>(endpoint, (RequestOptions) => {
+      RequestOptions.method = RequestMethod.Post,
+      RequestOptions.body = JSON.stringify(body)
+    })
 
-  public async patch(endpoint: RouteLike, body) {
-    let req = await fetch(this.url + this.version + endpoint, {
-      method: RequestMethod.Patch,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: this.password,
-      },
-      body: JSON.stringify(body),
-    });
-
-    return await this.parseResponse(req);
-  }
-  public async post(endpoint: RouteLike, body) {
-    let req = await fetch(this.url + this.version + endpoint, {
-      method: RequestMethod.Post,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: this.password,
-      },
-      body: JSON.stringify(body),
-    });
-
-    return await this.parseResponse(req);
+    return res
   }
 
   public async delete(endpoint: RouteLike) {
-    let req = await fetch(this.url + this.version + endpoint, {
-      method: RequestMethod.Delete,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: this.password,
-      },
-    });
 
-    return await this.parseResponse(req);
+    const res = await this.makeRequest(endpoint, (requestOptions) => {
+      requestOptions.method = RequestMethod.Delete;
+    }) 
+
+    return res
   }
 
-
+  /**
+   * 
+   * @param endpoint for the Request
+   * @param modifyRequest modified options for the Request
+   * @internal
+   */
   public async makeRequest<T>(endpoint: RouteLike, modifyRequest?: modifyRequest): Promise<T> {
     const options: Dispatcher.RequestOptions = {
-      path: `${this.versionedPath && this.version ? `/${this.version}` : ""}${endpoint}`,
+      path: `${this.version}${endpoint}`,
       headers: {
-        Authorization: this.password
+        "Content-type": "application/json",
+        Authorization: this.password,
+        "user-agent": `${PkgInfo.name} (${PkgInfo.repository.url} ${PkgInfo.version})`
       },
       headersTimeout: this.requestTimeout,
-      method: RequestMethod.Get
+      method: RequestMethod.Get,
     }
 
     modifyRequest?.(options)
 
-    const req = this.agent.request(options)
+    const req = await this.agent.request(options)
 
+    if(req.statusCode === 404) return await req.body.json() as T satisfies InvalidRestRequest;
     if(options.method === RequestMethod.Delete) return;
 
-    return await (await req).body.json()
-  }
-
-  private async parseResponse(req: Response) {
-    const jsonBody = await req.json().catch(() => null);
-    this.poru.emit("raw", "Rest", jsonBody);
-    return await jsonBody;
+    return await req.body.json()
   }
 }

@@ -51,6 +51,19 @@ export interface channelMixOptions {
 interface lowPassOptions {
   smoothing: number;
 }
+
+export interface LavalinkFiltersData {
+  volume?: number;
+  equalizer?: Band[],
+  karaoke?: karaokeOptions,
+  timescale?: timescaleOptions,
+  tremolo?: tremoloOptions,
+  vibrato?: vibratoOptions,
+  rotation?: rotationOptions,
+  distortion?: distortionOptions,
+  channelMix?: channelMixOptions,
+  lowPass?: lowPassOptions
+} 
 export class Filters {
   public player: Player;
   public volume: number;

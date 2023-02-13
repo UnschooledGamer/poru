@@ -3,6 +3,7 @@
     "lib": ["ESNext"],
     "module": "commonjs",
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "target": "ESNext",
     "outDir": "./dist",  
     "sourceMap": true,
