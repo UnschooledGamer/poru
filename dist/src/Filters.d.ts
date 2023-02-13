@@ -44,6 +44,18 @@ export interface channelMixOptions {
 interface lowPassOptions {
     smoothing: number;
 }
+export interface LavalinkFiltersData {
+    volume?: number;
+    equalizer?: Band[];
+    karaoke?: karaokeOptions;
+    timescale?: timescaleOptions;
+    tremolo?: tremoloOptions;
+    vibrato?: vibratoOptions;
+    rotation?: rotationOptions;
+    distortion?: distortionOptions;
+    channelMix?: channelMixOptions;
+    lowPass?: lowPassOptions;
+}
 export declare class Filters {
     player: Player;
     volume: number;
@@ -56,7 +68,7 @@ export declare class Filters {
     channelMix: channelMixOptions;
     lowPass: lowPassOptions;
     timescale: timescaleOptions;
-    constructor(player: any);
+    constructor(player: Player);
     setEqualizer(bands: Band[]): Filters;
     /**
         * Change the karaoke Options applied to the currently playing track

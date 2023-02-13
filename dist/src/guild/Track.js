@@ -53,6 +53,11 @@ class Track {
         this.track = result.tracks[0].track;
         return this;
     }
+    displayThumbnail(size) {
+        if (!size)
+            throw new ReferenceError("provide the Thumbnail Size");
+        return `https://i.ytimg.com/vi/${this.info.identifier}/${size}.jpg`;
+    }
 }
 exports.Track = Track;
 //# sourceMappingURL=Track.js.map

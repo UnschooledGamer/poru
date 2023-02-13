@@ -44,7 +44,7 @@ export declare class Player extends EventEmitter {
         mute: boolean;
         deaf: boolean;
     }): this;
-    set(key: string, value: unknown): unknown;
+    set<K extends string, V = unknown>(key: K, value: V): V;
     get<K>(key: string): K;
     disconnect(): this;
     destroy(): void;

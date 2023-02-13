@@ -1,10 +1,12 @@
 /// <reference types="node" />
-import { Node } from "./Node";
+import { Node, type websocketVersion } from "./Node";
 import { Player } from "./Player";
 import { EventEmitter } from "events";
 import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
 import { Track } from "./guild/Track";
+import { RestVersion } from "./Rest";
+import { type Pool } from "undici";
 export interface NodeGroup {
     name: string;
     host: string;
@@ -12,6 +14,10 @@ export interface NodeGroup {
     password: string;
     secure?: boolean;
     region?: string[];
+    apiVersion?: RestVersion;
+    websocketVersion?: websocketVersion;
+    poolOptions?: Pool.Options;
+    requestTimeout?: number;
 }
 export interface ResolveOptions {
     query: string;
@@ -28,7 +34,7 @@ export interface PoruOptions {
     resumeTimeout?: number;
     reconnectTimeout?: number | null;
     reconnectTries?: number | null;
-    send: Function | null;
+    send?: Function | null;
 }
 export interface ConnectionOptions {
     guildId: string;
@@ -130,5 +136,6 @@ export declare class Poru extends EventEmitter {
     decodeTracks(tracks: string[], node: Node): Promise<unknown>;
     getLavalinkInfo(name: string): Promise<unknown>;
     getLavalinkStatus(name: string): Promise<unknown>;
+    getLavalinkVersion(name: string): Promise<string | null>;
     get(guildId: string): Player;
 }

@@ -14,6 +14,11 @@ class Node {
     restURL;
     socketURL;
     password;
+    apiVersion;
+    version;
+    versionedPath;
+    poolOptions;
+    requestTimeout;
     secure;
     regions;
     sessionId;
@@ -32,9 +37,11 @@ class Node {
         this.poru = poru;
         this.name = node.name;
         this.options = node;
-        this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
         this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/`;
         this.password = node.password || "youshallnotpass";
+        this.apiVersion = node.apiVersion ?? "v3";
+        this.version = node.websocketVersion ?? "v3";
+        this.requestTimeout = node.requestTimeout ?? 15e3;
         this.secure = node.secure || false;
         this.regions = node.region || null;
         this.sessionId = null;
@@ -60,7 +67,8 @@ class Node {
         };
         if (this.resumeKey)
             headers["Resume-Key"] = this.resumeKey;
-        this.ws = new ws_1.default(this.socketURL, { headers });
+        const finalSocketUrl = new URL(`${this.socketURL}${this.version}/websocket`);
+        this.ws = new ws_1.default(finalSocketUrl.toString(), { headers });
         this.ws.on("open", this.open.bind(this));
         this.ws.on("error", this.error.bind(this));
         this.ws.on("message", this.message.bind(this));
@@ -77,6 +85,7 @@ class Node {
     reconnect() {
         this.reconnectAttempt = setTimeout(() => {
             if (this.attempt > this.reconnectTries) {
+                this.disconnect();
                 throw new Error(`[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`);
             }
             this.isConnected = false;
@@ -114,6 +123,17 @@ class Node {
         }
         return penalties;
     }
+    /**
+     * fetch stats of the node via Rest api
+     */
+    async fetchStats() {
+        return this.rest.makeRequest("/stats");
+    }
+    async fetchVersion() {
+        return this.rest.makeRequest("/version", (request) => {
+            request.path = "/version";
+        });
+    }
     open() {
         if (this.reconnectAttempt) {
             clearTimeout(this.reconnectAttempt);
@@ -138,7 +158,7 @@ class Node {
         if (!packet?.op)
             return;
         this.poru.emit("raw", "Node", packet);
-        this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
+        this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${packet} `);
         if (packet.op === "stats") {
             delete packet.op;
             this.setStats(packet);
@@ -146,9 +166,9 @@ class Node {
         if (packet.op === "ready") {
             this.rest.setSessionId(packet.sessionId);
             this.sessionId = packet.sessionId;
-            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${packet}`);
             if (this.resumeKey) {
-                this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
+                this.rest.patch(`/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
                 this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
             }
         }
@@ -157,7 +177,6 @@ class Node {
             player.emit(packet.op, packet);
     }
     close(event) {
-        this.disconnect();
         this.poru.emit("nodeDisconnect", this, event);
         this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code : ${event || "Unknown code"}`);
         if (event !== 1000)
@@ -170,10 +189,10 @@ class Node {
         this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event}`);
     }
     async getRoutePlannerStatus() {
-        return await this.rest.get(`/v3/routeplanner/status`);
+        return await this.rest.makeRequest(`/routeplanner/status`);
     }
     async unmarkFailedAddress(address) {
-        return this.rest.post(`/v3/routeplanner/free/address`, { address });
+        return this.rest.post(`/routeplanner/free/address`, { address });
     }
 }
 exports.Node = Node;

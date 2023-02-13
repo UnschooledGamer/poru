@@ -211,6 +211,7 @@ class Player extends events_1.EventEmitter {
                 }
                 if (this.queue.length === 0) {
                     this.isPlaying = false;
+                    this.currentTrack = null;
                     return this.poru.emit("playerDisconnect", this);
                 }
                 else if (this.queue.length > 0) {
@@ -254,12 +255,12 @@ class Player extends events_1.EventEmitter {
     async resolve({ query, source, requester }) {
         const regex = /^https?:\/\//;
         if (regex.test(query)) {
-            let response = await this.node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`);
+            let response = await this.node.rest.makeRequest(`/loadtracks?identifier=${encodeURIComponent(query)}`);
             return new Response_1.Response(response, requester);
         }
         else {
             let track = `${source || "ytsearch"}:${query}`;
-            let response = await this.node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(track)}`);
+            let response = await this.node.rest.makeRequest(`/v3/loadtracks?identifier=${encodeURIComponent(track)}`);
             return new Response_1.Response(response, requester);
         }
     }

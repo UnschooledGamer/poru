@@ -305,13 +305,13 @@ export class Player extends EventEmitter {
     const regex = /^https?:\/\//;
 
     if (regex.test(query)) {
-      let response = await this.node.rest.get(
-        `/v3/loadtracks?identifier=${encodeURIComponent(query)}`
+      let response = await this.node.rest.makeRequest(
+        `/loadtracks?identifier=${encodeURIComponent(query)}`
       );
       return new Response(response, requester);
     } else {
       let track = `${source || "ytsearch"}:${query}`;
-      let response = await this.node.rest.get(
+      let response = await this.node.rest.makeRequest(
         `/v3/loadtracks?identifier=${encodeURIComponent(track)}`
       );
       return new Response(response, requester);

@@ -85,8 +85,11 @@ class Filters {
         const { equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass, volume } = this;
         this.player.node.rest.updatePlayer({
             guildId: this.player.guildId,
-            data: { filters: { volume, equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass,
-                } }
+            data: {
+                filters: {
+                    volume, equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass,
+                }
+            }
         });
         return this;
     }

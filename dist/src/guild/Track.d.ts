@@ -20,4 +20,6 @@ export declare class Track {
     info: trackInfo;
     constructor(data: trackData, requester?: any);
     resolve(poru: Poru): Promise<this>;
+    displayThumbnail(size: ThumbnailSizes): string;
 }
+export type ThumbnailSizes = "default" | "mqdefault" | "hqdefault" | "maxresdefault";

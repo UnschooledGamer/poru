@@ -69,7 +69,7 @@ class Poru extends events_1.EventEmitter {
                 this.send = (packet) => {
                     const guild = client.guilds.get(packet.d.guild_id);
                     if (guild)
-                        guild.shard.send(packet);
+                        guild.shard.send(packet?.op, packet?.d);
                 };
                 client.on("packet", async (packet) => {
                     await this.packetUpdate(packet);
@@ -79,6 +79,8 @@ class Poru extends events_1.EventEmitter {
             case "other": {
                 if (!this.send)
                     throw new Error("Send function is required in Poru Options");
+                if (typeof this.send != "function")
+                    throw new TypeError(`Send Function needs to be a function, but got ${typeof this.send}`);
                 this.send = this.options.send;
                 break;
             }
@@ -127,7 +129,7 @@ class Poru extends events_1.EventEmitter {
     }
     getNode(identifier = "auto") {
         if (!this.nodes.size)
-            throw new Error(`No nodes avaliable currently`);
+            throw new Error(`No nodes available currently`);
         if (identifier === "auto")
             return this.leastUsedNodes;
         const node = this.nodes.get(identifier);
@@ -142,7 +144,7 @@ class Poru extends events_1.EventEmitter {
         if (player)
             return player;
         if (this.leastUsedNodes.length === 0)
-            throw new Error("[Poru Error] No nodes are avaliable");
+            throw new Error("[Poru Error] No nodes are available");
         let node;
         if (options.region) {
             const region = this.getNodeByRegion(options.region)[0];
@@ -152,7 +154,7 @@ class Poru extends events_1.EventEmitter {
             node = this.nodes.get(this.leastUsedNodes[0].name);
         }
         if (!node)
-            throw new Error("[Poru Error] No nodes are avalible");
+            throw new Error("[Poru Error] No nodes are available");
         return this.createPlayer(node, options);
     }
     createPlayer(node, options) {
@@ -176,39 +178,37 @@ class Poru extends events_1.EventEmitter {
             throw new Error("No nodes are available.");
         const regex = /^https?:\/\//;
         if (regex.test(query)) {
-            let response = await node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`);
+            let response = await node.rest.makeRequest(`/loadtracks?identifier=${encodeURIComponent(query)}`);
             return new Response_1.Response(response, requester);
         }
         else {
             let track = `${source || "ytsearch"}:${query}`;
-            let response = await node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(track)}`);
+            let response = await node.rest.makeRequest(`/loadtracks?identifier=${encodeURIComponent(track)}`);
             return new Response_1.Response(response, requester);
         }
     }
     async decodeTrack(track, node) {
         if (!node)
             node = this.leastUsedNodes[0];
-        return node.rest.get(`/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
+        return node.rest.makeRequest(`/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
     }
     async decodeTracks(tracks, node) {
-        return await node.rest.post(`/v3/decodetracks`, tracks);
+        return await node.rest.post(`/decodetracks`, tracks);
     }
     async getLavalinkInfo(name) {
         let node = this.nodes.get(name);
-        return await node.rest.get(`/v3/info`);
+        return await node.rest.makeRequest(`/info`);
     }
     async getLavalinkStatus(name) {
         let node = this.nodes.get(name);
-        return await node.rest.get(`/v3/stats`);
+        return await node.rest.makeRequest(`/stats`);
     }
-    /* Temp removed
-  
-  async getLavalinkVersion(name:string){
-    let node = this.nodes.get(name)
-    return await node.rest.get(`/version`)
-  
-  }
-  */
+    async getLavalinkVersion(name) {
+        let node = this.nodes.get(name);
+        return await node.rest.makeRequest(`/version`, (R) => {
+            R.path = `/version`;
+        });
+    }
     get(guildId) {
         return this.players.get(guildId);
     }

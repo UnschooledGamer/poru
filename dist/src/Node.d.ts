@@ -1,6 +1,8 @@
 import { Poru, PoruOptions, NodeGroup } from "./Poru";
 import WebSocket from "ws";
-import { Rest } from "./Rest";
+import { Rest, RestVersion } from "./Rest";
+import { type Pool } from "undici";
+export type websocketVersion = Exclude<RestVersion, "v2">;
 export interface NodeStats {
     players: number;
     playingPlayers: number;
@@ -10,7 +12,7 @@ export interface NodeStats {
         free: number;
         allocated: number;
     };
-    frameStats: {
+    frameStats?: {
         sent: number;
         deficit: number;
         nulled: number;
@@ -22,6 +24,10 @@ export interface NodeStats {
     };
     uptime: number;
 }
+export interface LavalinkSession {
+    resumingKey?: string;
+    timeout?: number;
+}
 export declare class Node {
     isConnected: boolean;
     poru: Poru;
@@ -29,6 +35,11 @@ export declare class Node {
     readonly restURL: string;
     readonly socketURL: string;
     password: string;
+    readonly apiVersion: RestVersion;
+    readonly version: websocketVersion;
+    readonly versionedPath: boolean;
+    readonly poolOptions: Pool.Options;
+    readonly requestTimeout: number;
     readonly secure: boolean;
     readonly regions: Array<string>;
     sessionId: string;
@@ -49,6 +60,11 @@ export declare class Node {
     reconnect(): void;
     disconnect(): void;
     get penalties(): number;
+    /**
+     * fetch stats of the node via Rest api
+     */
+    fetchStats(): Promise<NodeStats | {}>;
+    fetchVersion(): Promise<string | null>;
     private open;
     private setStats;
     private message;
