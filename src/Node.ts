@@ -4,6 +4,7 @@ import { Config as config } from "./config";
 import { Rest, RestVersion } from "./Rest";
 import { type Pool } from "undici";
 
+export type websocketVersion = Exclude<RestVersion, "v2">
 export interface NodeStats {
   players: number;
   playingPlayers: number;
@@ -13,7 +14,7 @@ export interface NodeStats {
     free: number;
     allocated: number;
   };
-  frameStats: {
+  frameStats?: {
     sent: number;
     deficit: number;
     nulled: number;
@@ -26,6 +27,11 @@ export interface NodeStats {
   uptime: number;
 }
 
+export interface LavalinkSession {
+  resumingKey?: string,
+  timeout?: number
+}
+
 export class Node {
   public isConnected: boolean;
   public poru: Poru;
@@ -34,6 +40,7 @@ export class Node {
   public readonly socketURL: string;
   public password: string;
   public readonly apiVersion: RestVersion;
+  public readonly version: websocketVersion;
   public readonly versionedPath: boolean;
   public readonly poolOptions: Pool.Options;
   public readonly requestTimeout: number
@@ -59,7 +66,7 @@ export class Node {
     this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/`;
     this.password = node.password || "youshallnotpass";
     this.apiVersion = node.apiVersion ?? "v3";
-    this.versionedPath = node.versionedPath ?? true
+    this.version = node.websocketVersion ?? "v3";
     this.requestTimeout = node.requestTimeout ?? 15e3
     this.secure = node.secure || false;
     this.regions = node.region || null;
@@ -85,7 +92,10 @@ export class Node {
       "Client-Name": config.clientName,
     };
     if (this.resumeKey) headers["Resume-Key"] = this.resumeKey;
-    this.ws = new WebSocket(this.socketURL, { headers });
+
+    const finalSocketUrl = new URL(`${this.socketURL}${this.version}/websocket`)
+
+    this.ws = new WebSocket(finalSocketUrl.toString(), { headers });
     this.ws.on("open", this.open.bind(this));
     this.ws.on("error", this.error.bind(this));
     this.ws.on("message", this.message.bind(this));
@@ -103,6 +113,7 @@ export class Node {
   public reconnect() {
     this.reconnectAttempt = setTimeout(() => {
       if (this.attempt > this.reconnectTries) {
+        this.disconnect()
         throw new Error(
           `[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`
         );
@@ -145,6 +156,19 @@ export class Node {
     return penalties;
   }
 
+  /**
+   * fetch stats of the node via Rest api
+   */
+  public async fetchStats(): Promise<NodeStats|{}> {
+    return this.rest.makeRequest("/stats")
+  }
+
+  public async fetchVersion(): Promise<string| null> {
+    return this.rest.makeRequest("/version", (request) => {
+      request.path = "/version"
+    })
+  }
+
   private open() {
     if (this.reconnectAttempt) {
       clearTimeout(this.reconnectAttempt);
@@ -184,7 +208,7 @@ export class Node {
       this.sessionId = packet.sessionId;
       this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${packet}`)
       if (this.resumeKey) {
-        this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
+        this.rest.patch(`/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
         this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`
         );
       }
@@ -195,7 +219,6 @@ export class Node {
   }
 
   private close(event: any): void {
-    this.disconnect();
     this.poru.emit("nodeDisconnect", this, event);
     this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code : ${event || "Unknown code"
       }`
@@ -213,11 +236,11 @@ export class Node {
   }
 
   public async getRoutePlannerStatus(): Promise<any> {
-    return await this.rest.get(`/v3/routeplanner/status`)
+    return await this.rest.makeRequest(`/routeplanner/status`)
   }
 
   public async unmarkFailedAddress(address: string): Promise<any> {
-    return this.rest.post(`/v3/routeplanner/free/address`, { address })
+    return this.rest.post(`/routeplanner/free/address`, { address })
 
   }
 
