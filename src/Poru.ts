@@ -155,6 +155,8 @@ export class Poru extends EventEmitter {
     this.version = config.version;
     this.isActivated = false;
     this.send = null;
+
+    this._validateOptions(options)
   }
 
   public init(client: any) {
@@ -214,6 +216,21 @@ export class Poru extends EventEmitter {
         break;
       }
     }
+  }
+
+  protected _validateOptions(options: PoruOptions) {
+
+    if(!options) throw new TypeError("PoruOptions must not be empty")
+
+    if(typeof options.plugins !== "undefined" && !Array.isArray(options.plugins)) throw new Error(`[Poru Validation Error] Poru option "plugins" must be an Array, but got ${typeof options.plugins}`)
+    if(typeof options.autoResume !== "undefined" && typeof options.autoResume !== "boolean") throw new TypeError(`[Poru Validation Error] Poru option "autoResume" must to be an boolean, but got ${typeof options.autoResume}`)
+    if(typeof options.library !== "undefined" && typeof options.library !== "string") throw new TypeError(`[Poru Validation Error] Poru option "library" needs to be an string, but got ${typeof options.library}`)
+    if(options.library === "other" && typeof options.send !== "function") throw new TypeError(`[Poru Validation Error] Poru option "library" is "other" so "send" must be present & as a function`)
+    if(typeof options.resumeKey !== "undefined" && typeof options.resumeKey !== "string") throw new TypeError(`[Poru Validation Error] Poru option "resumeKey" must be a string`)
+    if(typeof options.resumeTimeout !== "undefined" && typeof options.resumeTimeout !== "number") throw new TypeError(`[Poru Validation Error] Poru option "resumeTimeout" must be a number`)
+    if(typeof options.reconnectTimeout !== "undefined" && typeof options.reconnectTimeout !== "number") throw new TypeError(`[Poru Validation Error] Poru option "reconnectTimeout" must be a number`)
+    if(typeof options.reconnectTries !== "undefined" && typeof options.reconnectTries !== "number") throw new TypeError(`[Poru Validation Error] Poru option "reconnectTries" must be a number`)
+
   }
 
   public packetUpdate(packet: any) {
@@ -276,6 +293,8 @@ export class Poru extends EventEmitter {
   public createConnection(options: ConnectionOptions): Player {
     const player = this.players.get(options.guildId);
     if (player) return player;
+    
+    if(!this.isActivated) throw new Error("[Poru Error] Poru is not activated, use <Poru>.init(client)")
 
     if (this.leastUsedNodes.length === 0)
       throw new Error("[Poru Error] No nodes are available");

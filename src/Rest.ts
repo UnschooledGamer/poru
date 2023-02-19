@@ -2,7 +2,7 @@ import { Node, NodeStats } from "./Node";
 import { type Dispatcher, type Response, Pool} from "undici";
 import { Poru } from "./Poru";
 import PkgInfo from "../package.json"
-import { Player } from "./Player";
+import { LavalinkPlayer, Player } from "./Player";
 import { LavalinkFiltersData } from "./Filters";
 import { type IVoiceServer } from "./Connection";
 
@@ -36,7 +36,7 @@ export enum RequestMethod {
   "Put" = "PUT",
 }
 
-export type RestVersion = "v2" | "v3" | "v4";
+export type RestVersion = "v3" | "v4";
 
 export type modifyRequest = (options: Dispatcher.RequestOptions) => void;
 
@@ -118,9 +118,9 @@ export class Rest {
     this.sessionId = sessionId;
   }
 
-  async getAllPlayers(): Promise<Player[]> {
+  async getAllPlayers(): Promise<LavalinkPlayer[]> {
     if(!this.sessionId) throw new ReferenceError(`The Lavalink-node is not connected/ready, or is not Up-to date`)
-    const players = await this.makeRequest(`/sessions/${this.sessionId}/players`) as Player[]
+    const players = await this.makeRequest(`/sessions/${this.sessionId}/players`) as LavalinkPlayer[]
 
     if(!Array.isArray(players)) return []
 
@@ -185,7 +185,7 @@ export class Rest {
    */
   public async makeRequest<T>(endpoint: RouteLike, modifyRequest?: modifyRequest): Promise<T> {
     const options: Dispatcher.RequestOptions = {
-      path: `${this.version}${endpoint}`,
+      path: `/${this.version}${endpoint}`,
       headers: {
         "Content-type": "application/json",
         Authorization: this.password,
@@ -196,6 +196,10 @@ export class Rest {
     }
 
     modifyRequest?.(options)
+    
+    const url = new URL(`${this.url}${options.path}`)
+    url.searchParams.append("trace", "true")
+    options.path = url.toString().replace(this.url, "")
 
     const req = await this.agent.request(options)
 
