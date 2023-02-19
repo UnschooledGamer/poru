@@ -112,7 +112,7 @@ class Rest {
      */
     async makeRequest(endpoint, modifyRequest) {
         const options = {
-            path: `${this.version}${endpoint}`,
+            path: `/${this.version}${endpoint}`,
             headers: {
                 "Content-type": "application/json",
                 Authorization: this.password,
@@ -122,6 +122,9 @@ class Rest {
             method: RequestMethod.Get,
         };
         modifyRequest?.(options);
+        const url = new URL(`${this.url}${options.path}`);
+        url.searchParams.append("trace", "true");
+        options.path = url.toString().replace(this.url, "");
         const req = await this.agent.request(options);
         if (req.statusCode === 404)
             return await req.body.json();

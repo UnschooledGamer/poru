@@ -1,7 +1,7 @@
 import { Node } from "./Node";
 import { type Dispatcher } from "undici";
 import { Poru } from "./Poru";
-import { Player } from "./Player";
+import { LavalinkPlayer, Player } from "./Player";
 import { LavalinkFiltersData } from "./Filters";
 import { type IVoiceServer } from "./Connection";
 export interface updatePlayerOptions {
@@ -31,7 +31,7 @@ export declare enum RequestMethod {
     "Patch" = "PATCH",
     "Put" = "PUT"
 }
-export type RestVersion = "v2" | "v3" | "v4";
+export type RestVersion = "v3" | "v4";
 export type modifyRequest = (options: Dispatcher.RequestOptions) => void;
 /**
  * Received when a API Request encounters an error
@@ -96,7 +96,7 @@ export declare class Rest {
     requestTimeout: number;
     constructor(poru: Poru, node: Node);
     setSessionId(sessionId: string): void;
-    getAllPlayers(): Promise<Player[]>;
+    getAllPlayers(): Promise<LavalinkPlayer[]>;
     updatePlayer(options: updatePlayerOptions): Promise<Player>;
     destroyPlayer(guildId: string): Promise<void>;
     patch<T>(endpoint: RouteLike, body: any): Promise<T>;

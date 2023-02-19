@@ -2,15 +2,25 @@
 import { Poru, ResolveOptions } from "./Poru";
 import { Node } from "./Node";
 import { Track } from "./guild/Track";
-import { Connection } from "./Connection";
+import { Connection, IVoiceServer } from "./Connection";
 import Queue from "./guild/Queue";
 import { EventEmitter } from "events";
 import { Filters } from "./Filters";
 import { Response } from "./guild/Response";
 import { ConnectionOptions } from "./Poru";
 type Loop = "NONE" | "TRACK" | "QUEUE";
+export interface LavalinkPlayer {
+    guildId: string;
+    track?: Track;
+    volume: number;
+    paused: boolean;
+    voice: IVoiceServer & {
+        connected?: boolean;
+        ping?: number;
+    };
+}
 export declare class Player extends EventEmitter {
-    readonly data: Record<string, unknown>;
+    readonly data: Record<string, any>;
     poru: Poru;
     node: Node;
     connection: Connection;
@@ -48,8 +58,12 @@ export declare class Player extends EventEmitter {
     get<K>(key: string): K;
     disconnect(): this;
     destroy(): void;
-    restart(): void;
-    move(): void;
+    restart(): boolean;
+    /**
+     * moves the player to specified/another node
+     * @param identifier identifier for the node
+     */
+    move(identifier?: string): void;
     eventHandler(data: any): boolean | Promise<void>;
     resolve({ query, source, requester }: ResolveOptions): Promise<Response>;
     send(data: any): void;

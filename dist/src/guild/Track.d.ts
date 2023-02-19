@@ -11,6 +11,8 @@ export interface trackInfo {
     isStream: boolean;
     title: string;
     uri: string;
+    artworkURL?: string;
+    isrc?: string;
     sourceName: string;
     image?: string;
     requester?: any;

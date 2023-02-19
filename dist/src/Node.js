@@ -22,6 +22,7 @@ class Node {
     secure;
     regions;
     sessionId;
+    resumed;
     rest;
     ws;
     resumeKey;
@@ -39,13 +40,14 @@ class Node {
         this.options = node;
         this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/`;
         this.password = node.password || "youshallnotpass";
-        this.apiVersion = node.apiVersion ?? "v3";
-        this.version = node.websocketVersion ?? "v3";
+        this.apiVersion = node.apiVersion ?? config_1.Config.apiVersion;
+        this.version = node.websocketVersion ?? config_1.Config.websocketVersion;
         this.requestTimeout = node.requestTimeout ?? 15e3;
         this.secure = node.secure || false;
         this.regions = node.region || null;
         this.sessionId = null;
         this.rest = new Rest_1.Rest(poru, this);
+        this.resumed = false;
         this.ws = null;
         this.resumeKey = options.resumeKey || null;
         this.resumeTimeout = options.resumeTimeout || 60;
@@ -101,6 +103,7 @@ class Node {
             return;
         this.poru.players.forEach((player) => {
             if (player.node == this) {
+                this.poru.emit("debug", this.name, `Node was disconnected, moving players`);
                 player.move();
             }
         });
@@ -124,15 +127,29 @@ class Node {
         return penalties;
     }
     /**
+     * the node connection is resumed with the Lavalink-node or not
+     */
+    get isResumed() {
+        if (!this.ws)
+            throw new Error("Lavalink-node is not Connected");
+        return !!this.resumed;
+    }
+    /**
      * fetch stats of the node via Rest api
      */
     async fetchStats() {
-        return this.rest.makeRequest("/stats");
+        return await this.rest.makeRequest("/stats");
     }
     async fetchVersion() {
         return this.rest.makeRequest("/version", (request) => {
             request.path = "/version";
         });
+    }
+    /**
+     * Fetches the info of the Lavalink-node
+     */
+    async fetchInfo() {
+        return await this.rest.makeRequest(`/info`);
     }
     open() {
         if (this.reconnectAttempt) {
@@ -158,7 +175,7 @@ class Node {
         if (!packet?.op)
             return;
         this.poru.emit("raw", "Node", packet);
-        this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${packet} `);
+        this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
         if (packet.op === "stats") {
             delete packet.op;
             this.setStats(packet);
@@ -166,8 +183,17 @@ class Node {
         if (packet.op === "ready") {
             this.rest.setSessionId(packet.sessionId);
             this.sessionId = packet.sessionId;
-            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${packet}`);
-            if (this.resumeKey) {
+            this.resumed = packet.resumed;
+            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+            /**
+             * @todo set the players again after resumed
+             */
+            // if(this.isResumed) {
+            //   let players = await this.rest.getAllPlayers()
+            //   for(const player of players.values()) {
+            //   }
+            // }
+            if (this.resumeKey && !this.isResumed) {
                 this.rest.patch(`/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
                 this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
             }

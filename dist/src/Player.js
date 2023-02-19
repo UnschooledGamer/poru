@@ -98,7 +98,10 @@ class Player extends events_1.EventEmitter {
         return this;
     }
     pause(toggle = true) {
-        this.node.rest.updatePlayer({ guildId: this.guildId, data: { paused: toggle } });
+        this.node.rest.updatePlayer({
+            guildId: this.guildId,
+            data: { paused: toggle },
+        });
         this.isPlaying = !toggle;
         this.isPaused = toggle;
         return this;
@@ -133,10 +136,9 @@ class Player extends events_1.EventEmitter {
                 this.loop = "QUEUE";
                 break;
             }
-            default:
-                {
-                    this.loop = "NONE";
-                }
+            default: {
+                this.loop = "NONE";
+            }
         }
         return this;
     }
@@ -157,12 +159,12 @@ class Player extends events_1.EventEmitter {
             guildId: this.guildId,
             voiceChannel: this.voiceChannel,
             textChannel: this.textChannel,
-            mute: this.mute
+            mute: this.mute,
         });
         return this;
     }
     set(key, value) {
-        return this.data[key] = value;
+        return (this.data[key] = value);
     }
     get(key) {
         return this.data[key];
@@ -188,8 +190,36 @@ class Player extends events_1.EventEmitter {
         this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`);
         this.poru.players.delete(this.guildId);
     }
-    restart() { }
-    move() { }
+    restart() {
+        if (!this.currentTrack)
+            return true;
+        this.isPlaying = true;
+        this.position = 0;
+        this.node.rest.updatePlayer({
+            guildId: this.guildId,
+            data: {
+                encodedTrack: this.currentTrack.track,
+            },
+        });
+    }
+    /**
+     * moves the player to specified/another node
+     * @param identifier identifier for the node
+     */
+    move(identifier = "auto") {
+        const node = identifier === "auto" ? this.poru.getNode(identifier)[0] : this.poru.getNode(identifier);
+        if (!node)
+            return;
+        if (node.isConnected)
+            this.destroy();
+        this.poru.players.delete(this.guildId);
+        this.poru.createConnection(this);
+        const updatedPlayer = this.poru.players.get(this.guildId);
+        this.node = node;
+        this.connection = updatedPlayer.connection;
+        this.poru.players.set(this.guildId, this);
+        this.restart();
+    }
     eventHandler(data) {
         switch (data.type) {
             case "TrackStartEvent": {
@@ -246,10 +276,9 @@ class Player extends events_1.EventEmitter {
                 this.poru.emit("debug", `Player -> ${this.guildId}`, "Player paused Cause Channel deleted Or Client was kicked");
                 break;
             }
-            default:
-                {
-                    throw new Error(`An unknown event: ${data}`);
-                }
+            default: {
+                throw new Error(`An unknown event: ${data}`);
+            }
         }
     }
     async resolve({ query, source, requester }) {
