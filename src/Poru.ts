@@ -224,7 +224,7 @@ export class Poru extends EventEmitter {
 
     if(typeof options.plugins !== "undefined" && !Array.isArray(options.plugins)) throw new Error(`[Poru Validation Error] Poru option "plugins" must be an Array, but got ${typeof options.plugins}`)
     if(typeof options.autoResume !== "undefined" && typeof options.autoResume !== "boolean") throw new TypeError(`[Poru Validation Error] Poru option "autoResume" must to be an boolean, but got ${typeof options.autoResume}`)
-    if(typeof options.library !== "undefined" && typeof options.library !== "string") throw new TypeError(`[Poru Validation Error] Poru option "library" needs to be an string, but got ${typeof options.library}`)
+    if(typeof options.library !== "undefined" && typeof options.library !== "string" || typeof options.library === "undefined") throw new TypeError(`[Poru Validation Error] Poru option "library" needs to be an string, but got ${typeof options.library}`)
     if(options.library === "other" && typeof options.send !== "function") throw new TypeError(`[Poru Validation Error] Poru option "library" is "other" so "send" must be present & as a function`)
     if(typeof options.resumeKey !== "undefined" && typeof options.resumeKey !== "string") throw new TypeError(`[Poru Validation Error] Poru option "resumeKey" must be a string`)
     if(typeof options.resumeTimeout !== "undefined" && typeof options.resumeTimeout !== "number") throw new TypeError(`[Poru Validation Error] Poru option "resumeTimeout" must be a number`)
