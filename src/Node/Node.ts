@@ -27,7 +27,7 @@ export interface NodeStats {
 
 export class Node {
   public isConnected: boolean;
-  public poru: Poru;
+  public readonly poru: Poru;
   public readonly name: string;
   public readonly restURL: string;
   public readonly socketURL: string;
@@ -111,6 +111,8 @@ export class Node {
   public disconnect() {
     if (!this.isConnected) return;
 
+    this.poru.emit("debug", `[Web Socket] - (${this.name}): Node disconnected moving players if possible`);
+
     this.poru.players.forEach((player) => {
       if (player.node == this) {
        player.AutoMoveNode();
@@ -142,6 +144,7 @@ export class Node {
     if (this.reconnectAttempt) {
       clearTimeout(this.reconnectAttempt);
       delete this.reconnectAttempt;
+      this.poru.nodes.set(this.name, this)
     }
 
     this.poru.emit("nodeConnect", this);
@@ -178,7 +181,7 @@ export class Node {
       this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`)
       if (this.resumeKey) {
         this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
-        this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`
+        this.poru.emit("debug", `[Lavalink Rest] - (${this.name})  Resuming configured on Lavalink`
         );
       }
 
@@ -190,7 +193,7 @@ export class Node {
   private close(event: any): void {
     this.disconnect();
     this.poru.emit("nodeDisconnect", this, event);
-    this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code : ${event || "Unknown code"
+    this.poru.emit("debug", `[Web Socket] - (${this.name}) : Connection closed with Error code : ${event || "Unknown code"
       }`
     );
     if (event !== 1000) this.reconnect();
