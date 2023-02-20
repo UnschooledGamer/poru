@@ -98,7 +98,7 @@ export interface PoruEvents {
   playerEnd: (player: Player, track: Track, LavalinkData?: unknown) => void;
 
   /**
-   * Emitted when player compelete queue and going to disconnect
+   * Emitted when player complete queue and going to disconnect
    * @eventProperty
    */
   playerDisconnect: (player: Player) => void;
@@ -150,6 +150,23 @@ export class Poru extends EventEmitter {
     this.version = config.version;
     this.isActivated = false;
     this.send = null;
+
+    this._validateOptions(options)
+  }
+
+  protected _validateOptions(options: PoruOptions) {
+    if(!options) throw new Error("[Poru Error] Poru Options are required")
+
+    if(typeof options.plugins !== "undefined" && !Array.isArray(options.plugins)) throw new TypeError(`Poru Option "plugins" must be an array`)
+    if(typeof options.autoResume !== "undefined" && typeof options.autoResume !== "boolean" || !options.autoResume) throw new TypeError(`Poru option "autoResume" ${!options.autoResume ? "must be provided" : "must be a boolean"}`)
+    if(typeof options.library !== "undefined" && typeof options.library !== "string" || !options.library) throw new TypeError(`Poru option "library" ${!options.library ? "must be provided" : "must an string"}`)
+    if(options.library === "other" && typeof options.send !== "function") throw new TypeError(`Poru option "library" is set "other" so "send" must function`) 
+    if(typeof options.defaultPlatform !== "undefined" && typeof options.defaultPlatform !== "string") throw new TypeError(`Poru option "defaultPlatform" must be an string`)
+    if(typeof options.resumeKey !== "undefined" && typeof options.resumeKey !== "string") throw new TypeError(`Poru option "resumeKey" must be an string`)
+    if(typeof options.resumeTimeout !== "undefined" && typeof options.resumeTimeout !== "number") throw new TypeError(`Poru option "resumeTimeout" must be an number`)
+    if(typeof options.reconnectTimeout !== "undefined" && typeof options.reconnectTimeout !== "number") throw new TypeError(`Poru option "reconnectTimeout" must be an number`)
+    if(typeof options.reconnectTries !== "undefined" && typeof options.reconnectTries !== "number") throw new TypeError(`Poru option "reconnectTries" must be an number`)
+    if(typeof options.useCustomFilters !== "undefined" && typeof options.useCustomFilters !== "boolean") throw new TypeError(`Poru option "useCustomFilters" must be an boolean`)
   }
 
   public init(client: any) {
@@ -260,7 +277,7 @@ export class Poru extends EventEmitter {
   }
 
   getNode(identifier: string = "auto") {
-    if (!this.nodes.size) throw new Error(`No nodes avaliable currently`);
+    if (!this.nodes.size) throw new Error(`No nodes available currently`);
 
     if (identifier === "auto") return this.leastUsedNodes;
 
@@ -277,7 +294,7 @@ export class Poru extends EventEmitter {
     if (player) return player;
 
     if (this.leastUsedNodes.length === 0)
-      throw new Error("[Poru Error] No nodes are avaliable");
+      throw new Error("[Poru Error] No nodes are available");
     let node;
     if (options.region) {
       const region = this.getNodeByRegion(options.region)[0];
@@ -285,7 +302,7 @@ export class Poru extends EventEmitter {
     } else {
       node = this.nodes.get(this.leastUsedNodes[0].name);
     }
-    if (!node) throw new Error("[Poru Error] No nodes are avalible");
+    if (!node) throw new Error("[Poru Error] No nodes are available");
 
     return this.createPlayer(node, options);
   }

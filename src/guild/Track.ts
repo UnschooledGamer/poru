@@ -17,9 +17,10 @@ export interface trackInfo {
         title:string;
         uri:string;
         sourceName:string;
-        image? :string
-        requester?:any
-    
+        image? :string;
+        requester?:any;
+        artworkUrl?: string;
+        isrc?: string
 }
 
 
@@ -38,7 +39,7 @@ export class Track {
       sourceName: data.info.sourceName,
       title: data.info.title,
       uri: data.info.uri,
-      image: data.info.image || `https://i.ytimg.com/vi/${data.info.identifier}/maxresdefault.jpg` || null,
+      image: data.info.image || `https://i.ytimg.com/vi/${data.info.identifier}/mqdefault.jpg` || null,
       requester
     };
   }

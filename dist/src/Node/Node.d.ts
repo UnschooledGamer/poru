@@ -24,7 +24,7 @@ export interface NodeStats {
 }
 export declare class Node {
     isConnected: boolean;
-    poru: Poru;
+    readonly poru: Poru;
     readonly name: string;
     readonly restURL: string;
     readonly socketURL: string;

@@ -14,6 +14,8 @@ export interface trackInfo {
     sourceName: string;
     image?: string;
     requester?: any;
+    artworkUrl?: string;
+    isrc?: string;
 }
 export declare class Track {
     track: string;

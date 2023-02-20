@@ -84,7 +84,7 @@ export interface PoruEvents {
      */
     playerEnd: (player: Player, track: Track, LavalinkData?: unknown) => void;
     /**
-     * Emitted when player compelete queue and going to disconnect
+     * Emitted when player complete queue and going to disconnect
      * @eventProperty
      */
     playerDisconnect: (player: Player) => void;
@@ -116,6 +116,7 @@ export declare class Poru extends EventEmitter {
     isActivated: boolean;
     send: Function | null;
     constructor(client: any, nodes: NodeGroup[], options: PoruOptions);
+    protected _validateOptions(options: PoruOptions): void;
     init(client: any): this;
     packetUpdate(packet: any): void;
     addNode(options: NodeGroup): Node;
