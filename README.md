@@ -19,7 +19,7 @@ note: this version support only lavalink v4 or above
 
 
 <p align="center">
-  <a href="https://nodei.co/npm/poru/"><img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true"></a>
+  <a href="https://nodei.co/npm/poru/"><img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true"/></a>
 </p>
 
 ## Table of contents
