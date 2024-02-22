@@ -19,8 +19,8 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro">
-            Docusaurus Tutorial - 5min ⏱️
+            to="/api">
+            Get Started
           </Link>
         </div>
       </div>
@@ -33,7 +33,7 @@ export default function Home(): JSX.Element {
   return (
     <Layout
       title={`${siteConfig.title} Docs`}
-      description="Description will go into a meta tag in <head />">
+      description="A stable and powerful Lavalink client with some best features">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
