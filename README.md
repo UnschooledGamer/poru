@@ -7,12 +7,12 @@
     <img src="https://img.shields.io/discord/567705326774779944?style=flat-square" alt="Discord"/>
   </a>
   <a href="https://www.npmjs.com/package/poru">
-    <img src="https://img.shields.io/npm/v/poru?style=flat-square" alt="npm">
+    <img src="https://img.shields.io/npm/v/poru?style=flat-square" alt="npm"/>
   </a>
-  <img src="https://img.shields.io/github/stars/parasop/poru?style=flat-square" alt="GitHub Stars">
-  <img src="https://img.shields.io/github/issues-raw/parasop/poru?style=flat-square" alt="GitHub issues">
-  <img src="https://img.shields.io/snyk/vulnerabilities/npm/poru?style=flat-square" alt="Snyk Vulnerabilities for npm package">
-  <img src="https://img.shields.io/npm/l/poru?style=flat-square" alt="NPM">
+  <img src="https://img.shields.io/github/stars/parasop/poru?style=flat-square" alt="GitHub Stars"/>
+  <img src="https://img.shields.io/github/issues-raw/parasop/poru?style=flat-square" alt="GitHub issues"/>
+  <img src="https://img.shields.io/snyk/vulnerabilities/npm/poru?style=flat-square" alt="Snyk Vulnerabilities for npm package"/>
+  <img src="https://img.shields.io/npm/l/poru?style=flat-square" alt="NPM"/>
 </p>
 
 <p align="center">
