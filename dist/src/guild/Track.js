@@ -10,21 +10,20 @@ class Track {
     constructor(data, requester) {
         this.track = data.encoded;
         this.pluginInfo = data.pluginInfo,
-            this.userData = data.userData;
-        this.info = {
-            identifier: data.info.identifier,
-            isSeekable: data.info.isSeekable,
-            author: data.info.author,
-            length: data.info.length,
-            isStream: data.info.isStream,
-            sourceName: data.info.sourceName,
-            title: data.info.title,
-            uri: data.info.uri,
-            artworkUrl: data.info.artworkUrl || null,
-            isrc: data.info.isrc,
-            requester
-        };
+            this.userData = data.userData,
+            this.info = {
+                isrc: data.info.isrc || null,
+                uri: data.info.uri || null,
+                artworkUrl: data.info.artworkUrl || null,
+                ...data.info,
+                requester
+            };
     }
+    /**
+     * This function will resolve the track and return the track as resolved
+     * @param {Poru} poru The poru instance
+     * @returns {Promise<Track>} The resolved track
+     */
     async resolve(poru) {
         const query = [this.info.author, this.info.title]
             .filter((x) => !!x)
@@ -37,7 +36,7 @@ class Track {
             const officialAudio = result.tracks.find((track) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||
                 new RegExp(`^${escapeRegExp(this.info.title)}$`, "i").test(track.info.title));
             if (officialAudio) {
-                this.info.identifier = officialAudio.info.identifier;
+                //this.info.identifier = officialAudio.info.identifier;
                 this.track = officialAudio.track;
                 return this;
             }
@@ -46,7 +45,7 @@ class Track {
             const sameDuration = result.tracks.find((track) => track.info.length >= (this.info.length ? this.info.length : 0) - 2000 &&
                 track.info.length <= (this.info.length ? this.info.length : 0) + 2000);
             if (sameDuration) {
-                this.info.identifier = sameDuration.info.identifier;
+                //this.info.identifier = sameDuration.info.identifier;
                 this.track = sameDuration.track;
                 return this;
             }

@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Rest = exports.RequestMethod = void 0;
 const undici_1 = require("undici");
+;
+;
+;
 var RequestMethod;
 (function (RequestMethod) {
     RequestMethod["Get"] = "GET";
@@ -9,7 +12,7 @@ var RequestMethod;
     RequestMethod["Post"] = "POST";
     RequestMethod["Patch"] = "PATCH";
     RequestMethod["Put"] = "PUT";
-})(RequestMethod = exports.RequestMethod || (exports.RequestMethod = {}));
+})(RequestMethod || (exports.RequestMethod = RequestMethod = {}));
 class Rest {
     sessionId;
     password;
@@ -24,14 +27,14 @@ class Rest {
     setSessionId(sessionId) {
         this.sessionId = sessionId;
     }
-    getAllPlayers() {
+    async getAllPlayers() {
         return this.get(`/v4/sessions/${this.sessionId}/players`);
     }
     async updatePlayer(options) {
         return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=false`, options.data);
     }
     async destroyPlayer(guildId) {
-        await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);
+        return await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);
     }
     async get(path) {
         try {
