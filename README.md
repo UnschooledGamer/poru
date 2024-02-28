@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://discord.gg/Zmmc47Nrh8">
-    <img src="https://img.shields.io/discord/567705326774779944?style=flat-square" alt="Discord">
+    <img src="https://img.shields.io/discord/567705326774779944?style=flat-square" alt="Discord"/>
   </a>
   <a href="https://www.npmjs.com/package/poru">
     <img src="https://img.shields.io/npm/v/poru?style=flat-square" alt="npm">
