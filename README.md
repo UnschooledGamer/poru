@@ -22,7 +22,7 @@
 <p align="center">
 
   <a href="https://nodei.co/npm/poru/">
-    <img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true" alt="Poru NPM Package">
+    <img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true" alt="Poru NPM Package"/>
   </a>
 
 </p>
